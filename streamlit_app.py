@@ -1436,135 +1436,435 @@ elif page == "🤖 Predictive Analysis":
         unsafe_allow_html=True
     )
 
-
 # ============================================================
 # DATA EXPLORER PAGE
 # ============================================================
 
 elif page == "📁 Explore Data":
 
-    st.markdown(
-        '<div class="section-title">'
-        'Explore Cleaned Dataset'
-        '</div>',
-        unsafe_allow_html=True
+    # --------------------------------------------------------
+    # PAGE HEADER
+    # --------------------------------------------------------
+
+    st.markdown("""
+    <div style="
+        background: linear-gradient(90deg, #12355b, #2f6690);
+        padding: 25px 30px;
+        border-radius: 18px;
+        margin-bottom: 25px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    ">
+        <h2 style="
+            color:white;
+            margin:0;
+            font-size:30px;
+        ">
+            📁 Patient Data Explorer
+        </h2>
+
+        <p style="
+            color:#e8f1f8;
+            margin-top:8px;
+            margin-bottom:0;
+            font-size:16px;
+        ">
+            Explore demographic, clinical, biomarker and
+            outcome information for the selected patient population.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+    # --------------------------------------------------------
+    # KPI SUMMARY
+    # --------------------------------------------------------
+
+    filtered_count = len(filtered_df)
+    original_count = len(df)
+    column_count = len(filtered_df.columns)
+
+    patient_percentage = (
+        filtered_count / original_count * 100
+        if original_count > 0 else 0
     )
 
-    st.markdown(
-        '<div class="section-description">'
-        'Review the patient records included after applying '
-        'the selected dashboard filters.'
-        '</div>',
-        unsafe_allow_html=True
+
+    k1, k2, k3, k4 = st.columns(4)
+
+    k1.metric(
+        "👥 Filtered Patients",
+        f"{filtered_count:,}"
+    )
+
+    k2.metric(
+        "🗂️ Dataset Variables",
+        f"{column_count:,}"
+    )
+
+    k3.metric(
+        "🏥 Original Cohort",
+        f"{original_count:,}"
+    )
+
+    k4.metric(
+        "📊 Cohort Selected",
+        f"{patient_percentage:.1f}%"
     )
 
 
-    d1, d2, d3 = st.columns(3)
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    d1.metric(
-        "Filtered Patients",
-        f"{len(filtered_df):,}"
+
+    # --------------------------------------------------------
+    # COLUMN GROUPS
+    # --------------------------------------------------------
+
+    demographic_columns = {
+
+        "Patient Number":
+            "inpatient_number",
+
+        "Gender":
+            "gender",
+
+        "Age Group":
+            "agecat",
+
+        "BMI":
+            "bmi",
+
+        "BMI Category":
+            "bmi_category"
+    }
+
+
+    clinical_columns = {
+
+        "Admission Type":
+            "admission_way",
+
+        "Discharge Destination":
+            "destinationdischarge",
+
+        "NYHA Class":
+            "nyha_cardiac_function_classification",
+
+        "Killip Grade":
+            "killip_grade",
+
+        "Systolic BP":
+            "systolic_blood_pressure",
+
+        "Pulse":
+            "pulse",
+
+        "LVEF":
+            "lvef",
+
+        "CCI Score":
+            "cci_score"
+    }
+
+
+    biomarker_columns = {
+
+        "BNP":
+            "brain_natriuretic_peptide",
+
+        "Troponin":
+            "high_sensitivity_troponin",
+
+        "hs-CRP":
+            "hs_crp",
+
+        "Albumin":
+            "albumin",
+
+        "Creatinine":
+            "creatinine_enzymatic_method",
+
+        "GFR":
+            "glomerular_filtration_rate",
+
+        "Sodium":
+            "sodium"
+    }
+
+
+    outcome_columns = {
+
+        "28-Day Mortality":
+            "death_within_28_days",
+
+        "6-Month Mortality":
+            "death_within_6_months",
+
+        "28-Day Readmission":
+            "re_admission_within_28_days",
+
+        "6-Month Readmission":
+            "re_admission_within_6_months",
+
+        "6-Month ED Return":
+            "return_to_emergency_department_within_6_months"
+    }
+
+
+    # --------------------------------------------------------
+    # COLUMN SELECTOR SECTION
+    # --------------------------------------------------------
+
+    st.markdown("""
+    <div style="
+        background:white;
+        padding:18px 22px;
+        border-radius:14px;
+        border:1px solid #d9e2ec;
+        margin-bottom:15px;
+    ">
+        <h3 style="
+            color:#102a43;
+            margin:0;
+        ">
+            🔎 Build Your Patient View
+        </h3>
+
+        <p style="
+            color:#627d98;
+            margin-top:6px;
+            margin-bottom:0;
+        ">
+            Select variables from the categories below
+            to customize the patient table.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+    tab1, tab2, tab3, tab4 = st.tabs(
+        [
+            "👤 Demographics",
+            "🩺 Clinical",
+            "🧪 Biomarkers",
+            "📈 Outcomes"
+        ]
     )
 
-    d2.metric(
-        "Dataset Columns",
-        len(filtered_df.columns)
+
+    # --------------------------------------------------------
+    # DEMOGRAPHICS
+    # --------------------------------------------------------
+
+    with tab1:
+
+        selected_demo = st.multiselect(
+            "Select demographic variables",
+            options=list(
+                demographic_columns.keys()
+            ),
+            default=[
+                "Patient Number",
+                "Gender",
+                "Age Group",
+                "BMI"
+            ],
+            key="demo_columns"
+        )
+
+
+    # --------------------------------------------------------
+    # CLINICAL
+    # --------------------------------------------------------
+
+    with tab2:
+
+        selected_clinical = st.multiselect(
+            "Select clinical variables",
+            options=list(
+                clinical_columns.keys()
+            ),
+            default=[
+                "Admission Type",
+                "NYHA Class",
+                "Killip Grade"
+            ],
+            key="clinical_columns"
+        )
+
+
+    # --------------------------------------------------------
+    # BIOMARKERS
+    # --------------------------------------------------------
+
+    with tab3:
+
+        selected_biomarkers = st.multiselect(
+            "Select biomarker variables",
+            options=list(
+                biomarker_columns.keys()
+            ),
+            default=[],
+            key="biomarker_columns"
+        )
+
+
+    # --------------------------------------------------------
+    # OUTCOMES
+    # --------------------------------------------------------
+
+    with tab4:
+
+        selected_outcomes = st.multiselect(
+            "Select outcome variables",
+            options=list(
+                outcome_columns.keys()
+            ),
+            default=[
+                "6-Month Mortality",
+                "6-Month Readmission"
+            ],
+            key="outcome_columns"
+        )
+
+
+    # --------------------------------------------------------
+    # COMBINE SELECTED VARIABLES
+    # --------------------------------------------------------
+
+    selected_friendly_names = (
+        selected_demo
+        + selected_clinical
+        + selected_biomarkers
+        + selected_outcomes
     )
 
-    d3.metric(
-        "Original Patients",
-        f"{len(df):,}"
+
+    all_column_options = {}
+
+    all_column_options.update(
+        demographic_columns
     )
 
+    all_column_options.update(
+        clinical_columns
+    )
+
+    all_column_options.update(
+        biomarker_columns
+    )
+
+    all_column_options.update(
+        outcome_columns
+    )
+
+
+    selected_actual_columns = [
+
+        all_column_options[name]
+
+        for name in selected_friendly_names
+
+        if (
+            name in all_column_options
+            and
+            all_column_options[name]
+            in filtered_df.columns
+        )
+    ]
+
+
+    # --------------------------------------------------------
+    # PATIENT TABLE
+    # --------------------------------------------------------
 
     st.divider()
 
-
-   # ============================================================
-# SELECT COLUMNS TO DISPLAY
-# ============================================================
-
-st.subheader("Patient Data Explorer")
-
-# Friendly names for important dataset columns
-column_options = {
-    "Patient Number": "inpatient_number",
-    "Gender": "gender",
-    "Age Group": "agecat",
-    "Admission Type": "admission_way",
-    "Discharge Destination": "destinationdischarge",
-    "NYHA Class": "nyha_cardiac_function_classification",
-    "Killip Grade": "killip_grade",
-    "BMI": "bmi",
-    "BMI Category": "bmi_category",
-    "BNP": "brain_natriuretic_peptide",
-    "Troponin": "high_sensitivity_troponin",
-    "hs-CRP": "hs_crp",
-    "Albumin": "albumin",
-    "Creatinine": "creatinine_enzymatic_method",
-    "GFR": "glomerular_filtration_rate",
-    "LVEF": "lvef",
-    "28-Day Mortality": "death_within_28_days",
-    "6-Month Mortality": "death_within_6_months",
-    "6-Month Readmission": "re_admission_within_6_months",
-    "6-Month ED Return": "return_to_emergency_department_within_6_months"
-}
-
-# Default columns shown when page opens
-default_columns = [
-    "Patient Number",
-    "Gender",
-    "Age Group",
-    "Admission Type",
-    "NYHA Class",
-    "Killip Grade",
-    "BMI",
-    "6-Month Mortality",
-    "6-Month Readmission"
-]
-
-selected_display_columns = st.multiselect(
-    "Select columns to view",
-    options=list(column_options.keys()),
-    default=default_columns
-)
-
-# Convert friendly names back to dataset column names
-selected_actual_columns = [
-    column_options[name]
-    for name in selected_display_columns
-    if column_options[name] in filtered_df.columns
-]
-
-# Display selected data
-if selected_actual_columns:
-
-    display_df = filtered_df[
-        selected_actual_columns
-    ].copy()
-
-    # Rename columns with friendly names
-    reverse_names = {
-        value: key
-        for key, value in column_options.items()
-    }
-
-    display_df = display_df.rename(
-        columns=reverse_names
+    st.markdown(
+        "### 🏥 Patient Records"
     )
 
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True
-    )
 
-else:
+    if selected_actual_columns:
 
-    st.info(
-        "Select at least one column to display patient data."
-    )
+        display_df = filtered_df[
+            selected_actual_columns
+        ].copy()
 
+
+        # Friendly column names
+        reverse_names = {
+
+            value: key
+
+            for key, value
+            in all_column_options.items()
+        }
+
+
+        display_df = display_df.rename(
+            columns=reverse_names
+        )
+
+
+        # Summary above table
+        st.markdown(
+            f"""
+            <div style="
+                background:#eef6ff;
+                border-left:5px solid #2f6690;
+                padding:12px 16px;
+                border-radius:8px;
+                margin-bottom:15px;
+            ">
+
+            <b>{len(display_df):,} patients</b>
+            are currently displayed using
+
+            <b>{len(display_df.columns)}
+            selected variables</b>.
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+        # ----------------------------------------------------
+        # DISPLAY TABLE
+        # ----------------------------------------------------
+
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True,
+            height=500
+        )
+
+
+        # ----------------------------------------------------
+        # DOWNLOAD
+        # ----------------------------------------------------
+
+        csv = display_df.to_csv(
+            index=False
+        ).encode("utf-8")
+
+
+        st.download_button(
+            label="⬇️ Download Selected Patient Data",
+            data=csv,
+            file_name="heart_failure_patient_data.csv",
+            mime="text/csv",
+            use_container_width=False
+        )
+
+
+    else:
+
+        st.info(
+            "👆 Select variables from one or more "
+            "categories above to display patient data."
+        )
 # ============================================================
 # FOOTER
 # ============================================================
