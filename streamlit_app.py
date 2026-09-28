@@ -173,32 +173,55 @@ with chart1:
 
 
 # Chart 2 - 6-Month Mortality by NYHA Class
+# Chart 2 - 6-Month Mortality by NYHA Class
 with chart2:
+
     st.subheader("6-Month Mortality by NYHA Class")
 
+    # Make sure mortality is numeric
+    nyha_data = filtered_df[
+        [
+            "nyha_cardiac_function_classification",
+            "death_within_6_months"
+        ]
+    ].copy()
+
+    nyha_data["death_within_6_months"] = pd.to_numeric(
+        nyha_data["death_within_6_months"],
+        errors="coerce"
+    )
+
+    # Calculate mortality rate
     nyha_mortality = (
-        filtered_df.groupby((
+        nyha_data
+        .dropna()
+        .groupby(
             "nyha_cardiac_function_classification"
         )["death_within_6_months"]
         .mean()
         .mul(100)
         .reset_index()
-    ))
+    )
 
     nyha_mortality.columns = [
         "NYHA Class",
         "Mortality Rate"
     ]
 
-    fig_nyha = px.line(
+    # Create chart
+    fig_nyha = px.bar(
         nyha_mortality,
         x="NYHA Class",
         y="Mortality Rate",
-        markers=True
+        text_auto=".1f"
     )
 
     fig_nyha.update_yaxes(
-        title="Mortality Rate (%)"
+        title="6-Month Mortality Rate (%)"
+    )
+
+    fig_nyha.update_xaxes(
+        title="NYHA Class"
     )
 
     st.plotly_chart(
