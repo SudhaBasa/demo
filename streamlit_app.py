@@ -25,18 +25,16 @@ st.set_page_config(
 # CUSTOM CSS
 # ============================================================
 
-st.markdown("""
-<style>
+# --------------------------------------------------------
+# PATIENT DATA EXPLORER HEADER
+# --------------------------------------------------------
 
-/* Main background */
-.stApp {
-    background: linear-gradient(
-        135deg,
-        #f8fbff 0%,
-        #eef6ff 50%,
-        #fdf7fa 100%
-    );
-}
+st.title("📁 Patient Data Explorer")
+
+st.caption(
+    "Explore demographic, clinical, biomarker and outcome "
+    "information for the selected patient population."
+)
 
 /* Main page container */
 .block-container {
