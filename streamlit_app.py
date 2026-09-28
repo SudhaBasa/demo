@@ -17,7 +17,58 @@ st.write("Team 2 - Python Pioneers | Python Hackathon 2026")
 df = pd.read_csv(
     "Team2_PythonPioneers_Cardiac_Cleaned_Data.csv"
 )
+# -----------------------------
+# SIDEBAR FILTERS
+# -----------------------------
 
+st.sidebar.header("Filters")
+
+# Gender filter
+gender_options = sorted(
+    df["gender"].dropna().unique()
+)
+
+selected_gender = st.sidebar.multiselect(
+    "Gender",
+    options=gender_options,
+    default=gender_options
+)
+
+# Admission Type filter
+admission_options = sorted(
+    df["admission_way"].dropna().unique()
+)
+
+selected_admission = st.sidebar.multiselect(
+    "Admission Type",
+    options=admission_options,
+    default=admission_options
+)
+
+# NYHA filter
+nyha_options = sorted(
+    df["nyha_cardiac_function_classification"]
+    .dropna()
+    .unique()
+)
+
+selected_nyha = st.sidebar.multiselect(
+    "NYHA Class",
+    options=nyha_options,
+    default=nyha_options
+)
+
+# Apply filters
+filtered_df = df[
+    (df["gender"].isin(selected_gender))
+    &
+    (df["admission_way"].isin(selected_admission))
+    &
+    (
+        df["nyha_cardiac_function_classification"]
+        .isin(selected_nyha)
+    )
+]
 # Check that data loaded successfully
 # st.subheader("Dataset Overview")
 
@@ -31,11 +82,25 @@ df = pd.read_csv(
 st.header("Dashboard Overview")
 
 # Calculate KPI values
-total_patients = len(df)
+total_patients = len(filtered_df)
 
-mortality_28 = df["death_within_28_days"].mean() * 100
+mortality_28 = (
+    filtered_df["death_within_28_days"].mean() * 100
+)
 
-mortality_6m = df["death_within_6_months"].mean() * 100
+mortality_6m = (
+    filtered_df["death_within_6_months"].mean() * 100
+)
+
+readmission_6m = (
+    filtered_df["re_admission_within_6_months"].mean() * 100
+)
+
+ed_return_6m = (
+    filtered_df[
+        "return_to_emergency_department_within_6_months"
+    ].mean() * 100
+)
 
 readmission_6m = (
     df["re_admission_within_6_months"].mean() * 100
@@ -86,7 +151,7 @@ with chart1:
     st.subheader("Patient Distribution by Age Group")
 
     age_counts = (
-        df["agecat"]
+       filtered_df["agecat"]
         .value_counts()
         .sort_index()
         .reset_index()
@@ -112,7 +177,7 @@ with chart2:
     st.subheader("6-Month Mortality by NYHA Class")
 
     nyha_mortality = (
-        df.groupby(
+        filtered_df.groupby((
             "nyha_cardiac_function_classification"
         )["death_within_6_months"]
         .mean()
