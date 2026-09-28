@@ -7,7 +7,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
+
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -22,13 +22,13 @@ st.set_page_config(
 
 
 # ============================================================
-# CUSTOM DASHBOARD DESIGN
+# CUSTOM CSS
 # ============================================================
 
 st.markdown("""
 <style>
 
-/* Main page background */
+/* Main background */
 .stApp {
     background: linear-gradient(
         135deg,
@@ -38,7 +38,7 @@ st.markdown("""
     );
 }
 
-/* Main container */
+/* Main page container */
 .block-container {
     padding-top: 1.5rem;
     padding-bottom: 3rem;
@@ -59,14 +59,7 @@ st.markdown("""
     color: white;
 }
 
-/* Sidebar headings */
-[data-testid="stSidebar"] h1,
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3 {
-    color: #ffffff;
-}
-
-/* Main dashboard title */
+/* Main title */
 .dashboard-title {
     font-size: 42px;
     font-weight: 800;
@@ -82,13 +75,12 @@ st.markdown("""
     margin-bottom: 25px;
 }
 
-/* Section heading */
+/* Section titles */
 .section-title {
-    font-size: 27px;
+    font-size: 28px;
     font-weight: 700;
     color: #102a43;
     margin-top: 15px;
-    margin-bottom: 5px;
 }
 
 /* Section description */
@@ -107,53 +99,23 @@ st.markdown("""
     box-shadow: 0 4px 12px rgba(16,42,67,0.08);
 }
 
-/* KPI label */
-[data-testid="stMetricLabel"] {
-    font-weight: 600;
-}
-
 /* KPI value */
 [data-testid="stMetricValue"] {
     color: #102a43;
     font-weight: 700;
 }
 
-/* Plot containers */
+/* Plotly charts */
 [data-testid="stPlotlyChart"] {
     background: white;
     border-radius: 15px;
-}
-
-/* Dataframe */
-[data-testid="stDataFrame"] {
-    border-radius: 12px;
-}
-
-/* Horizontal line */
-hr {
-    border: none;
-    height: 1px;
-    background-color: #d9e2ec;
-    margin-top: 25px;
-    margin-bottom: 25px;
-}
-
-/* Insight box */
-.insight-box {
-    background-color: white;
-    border-left: 5px solid #3b82f6;
-    padding: 16px 20px;
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(16,42,67,0.06);
-    margin-top: 10px;
-    margin-bottom: 20px;
 }
 
 /* Footer */
 .footer {
     text-align: center;
     color: #829ab1;
-    padding-top: 30px;
+    padding-top: 20px;
     font-size: 14px;
 }
 
@@ -168,21 +130,19 @@ hr {
 @st.cache_data
 def load_data():
 
-    data = pd.read_csv(
+    return pd.read_csv(
         "Team2_PythonPioneers_Cardiac_Cleaned_Data.csv"
     )
-
-    return data
 
 
 df = load_data()
 
 
 # ============================================================
-# CONVERT IMPORTANT OUTCOME VARIABLES TO NUMERIC
+# CONVERT OUTCOME COLUMNS TO NUMERIC
 # ============================================================
 
-numeric_outcomes = [
+outcome_columns = [
     "death_within_28_days",
     "death_within_6_months",
     "re_admission_within_28_days",
@@ -190,7 +150,7 @@ numeric_outcomes = [
     "return_to_emergency_department_within_6_months"
 ]
 
-for column in numeric_outcomes:
+for column in outcome_columns:
 
     if column in df.columns:
 
@@ -201,30 +161,37 @@ for column in numeric_outcomes:
 
 
 # ============================================================
-# HEADER
+# MAIN HEADER
 # ============================================================
 
 st.markdown(
-    '<div class="dashboard-title">'
-    '❤️ Heart Failure Analytics Dashboard'
-    '</div>',
+    """
+    <div class="dashboard-title">
+        ❤️ Heart Failure Analytics Dashboard
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
 st.markdown(
-    '<div class="dashboard-subtitle">'
-    'Team 2 - Python Pioneers | Python Hackathon 2026'
-    '</div>',
+    """
+    <div class="dashboard-subtitle">
+        Team 2 - Python Pioneers | Python Hackathon 2026
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
 
 # ============================================================
-# SIDEBAR
+# SIDEBAR HEADER
 # ============================================================
 
 st.sidebar.title("❤️ Heart Failure")
-st.sidebar.caption("Interactive Analytics Dashboard")
+
+st.sidebar.caption(
+    "Interactive Analytics Dashboard"
+)
 
 st.sidebar.divider()
 
@@ -248,15 +215,15 @@ st.sidebar.divider()
 
 
 # ============================================================
-# FILTERS
+# SIDEBAR FILTERS
 # ============================================================
 
 st.sidebar.subheader("Patient Filters")
 
 
-# ---------------------------
-# Gender
-# ---------------------------
+# ------------------------------------------------------------
+# GENDER FILTER
+# ------------------------------------------------------------
 
 gender_options = sorted(
     df["gender"]
@@ -267,14 +234,17 @@ gender_options = sorted(
 
 selected_gender = st.sidebar.multiselect(
     "Gender",
-    gender_options,
-    default=gender_options
+    options=gender_options,
+    placeholder="All Genders"
 )
 
+if not selected_gender:
+    selected_gender = gender_options
 
-# ---------------------------
-# Age Group
-# ---------------------------
+
+# ------------------------------------------------------------
+# AGE GROUP FILTER
+# ------------------------------------------------------------
 
 age_options = list(
     df["agecat"]
@@ -285,14 +255,17 @@ age_options = list(
 
 selected_age = st.sidebar.multiselect(
     "Age Group",
-    age_options,
-    default=age_options
+    options=age_options,
+    placeholder="All Age Groups"
 )
 
+if not selected_age:
+    selected_age = age_options
 
-# ---------------------------
-# Admission Type
-# ---------------------------
+
+# ------------------------------------------------------------
+# ADMISSION TYPE FILTER
+# ------------------------------------------------------------
 
 admission_options = sorted(
     df["admission_way"]
@@ -303,14 +276,17 @@ admission_options = sorted(
 
 selected_admission = st.sidebar.multiselect(
     "Admission Type",
-    admission_options,
-    default=admission_options
+    options=admission_options,
+    placeholder="All Admission Types"
 )
 
+if not selected_admission:
+    selected_admission = admission_options
 
-# ---------------------------
-# NYHA
-# ---------------------------
+
+# ------------------------------------------------------------
+# NYHA FILTER
+# ------------------------------------------------------------
 
 nyha_options = sorted(
     df["nyha_cardiac_function_classification"]
@@ -320,14 +296,17 @@ nyha_options = sorted(
 
 selected_nyha = st.sidebar.multiselect(
     "NYHA Class",
-    nyha_options,
-    default=nyha_options
+    options=nyha_options,
+    placeholder="All NYHA Classes"
 )
 
+if not selected_nyha:
+    selected_nyha = nyha_options
 
-# ---------------------------
-# Killip
-# ---------------------------
+
+# ------------------------------------------------------------
+# KILLIP FILTER
+# ------------------------------------------------------------
 
 killip_options = sorted(
     df["killip_grade"]
@@ -337,9 +316,12 @@ killip_options = sorted(
 
 selected_killip = st.sidebar.multiselect(
     "Killip Grade",
-    killip_options,
-    default=killip_options
+    options=killip_options,
+    placeholder="All Killip Grades"
 )
+
+if not selected_killip:
+    selected_killip = killip_options
 
 
 # ============================================================
@@ -362,7 +344,7 @@ filtered_df = df[
 
 
 # ============================================================
-# HANDLE EMPTY FILTER RESULT
+# EMPTY FILTER CHECK
 # ============================================================
 
 if filtered_df.empty:
@@ -393,28 +375,32 @@ def percentage(data, column):
 
 
 # ============================================================
-# OVERVIEW PAGE
+# PAGE 1 — OVERVIEW
 # ============================================================
 
 if page == "🏠 Overview":
 
     st.markdown(
-        '<div class="section-title">'
-        'Executive Overview'
-        '</div>',
+        """
+        <div class="section-title">
+            Executive Overview
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
     st.markdown(
-        '<div class="section-description">'
-        'Key patient outcomes and hospital utilization indicators.'
-        '</div>',
+        """
+        <div class="section-description">
+            Key patient outcomes and hospital utilization indicators.
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
 
     # --------------------------------------------------------
-    # KPI CARDS
+    # KPIs
     # --------------------------------------------------------
 
     total_patients = len(filtered_df)
@@ -440,29 +426,29 @@ if page == "🏠 Overview":
     )
 
 
-    c1, c2, c3, c4, c5 = st.columns(5)
+    k1, k2, k3, k4, k5 = st.columns(5)
 
-    c1.metric(
-        "Patients",
+    k1.metric(
+        "👥 Patients",
         f"{total_patients:,}"
     )
 
-    c2.metric(
+    k2.metric(
         "28-Day Mortality",
         f"{mortality_28:.1f}%"
     )
 
-    c3.metric(
+    k3.metric(
         "6-Month Mortality",
         f"{mortality_6m:.1f}%"
     )
 
-    c4.metric(
+    k4.metric(
         "6-Month Readmission",
         f"{readmission_6m:.1f}%"
     )
 
-    c5.metric(
+    k5.metric(
         "6-Month ED Return",
         f"{ed_return_6m:.1f}%"
     )
@@ -472,15 +458,18 @@ if page == "🏠 Overview":
 
 
     # --------------------------------------------------------
-    # AGE DISTRIBUTION
+    # OVERVIEW CHARTS
     # --------------------------------------------------------
 
-    left, right = st.columns(2)
+    col1, col2 = st.columns(2)
 
 
-    with left:
+    # AGE DISTRIBUTION
+    with col1:
 
-        st.subheader("Patient Distribution by Age")
+        st.subheader(
+            "Patient Distribution by Age"
+        )
 
         age_counts = (
             filtered_df["agecat"]
@@ -493,7 +482,7 @@ if page == "🏠 Overview":
             "Patients"
         ]
 
-        fig = px.bar(
+        fig_age = px.bar(
             age_counts,
             x="Age Group",
             y="Patients",
@@ -501,24 +490,23 @@ if page == "🏠 Overview":
             template="plotly_white"
         )
 
-        fig.update_layout(
-            showlegend=False,
-            height=420
+        fig_age.update_layout(
+            height=420,
+            showlegend=False
         )
 
         st.plotly_chart(
-            fig,
+            fig_age,
             use_container_width=True
         )
 
 
-    # --------------------------------------------------------
     # GENDER DISTRIBUTION
-    # --------------------------------------------------------
+    with col2:
 
-    with right:
-
-        st.subheader("Gender Distribution")
+        st.subheader(
+            "Gender Distribution"
+        )
 
         gender_counts = (
             filtered_df["gender"]
@@ -531,26 +519,25 @@ if page == "🏠 Overview":
             "Patients"
         ]
 
-        fig = px.pie(
+        fig_gender = px.pie(
             gender_counts,
             names="Gender",
             values="Patients",
-            hole=0.45,
-            template="plotly_white"
+            hole=0.45
         )
 
-        fig.update_layout(
+        fig_gender.update_layout(
             height=420
         )
 
         st.plotly_chart(
-            fig,
+            fig_gender,
             use_container_width=True
         )
 
 
     # --------------------------------------------------------
-    # ADMISSION OUTCOMES
+    # OUTCOMES BY ADMISSION TYPE
     # --------------------------------------------------------
 
     st.subheader(
@@ -584,7 +571,7 @@ if page == "🏠 Overview":
         value_name="Rate"
     )
 
-    fig = px.bar(
+    fig_admission = px.bar(
         admission_long,
         x="admission_way",
         y="Rate",
@@ -594,49 +581,48 @@ if page == "🏠 Overview":
         template="plotly_white"
     )
 
-    fig.update_layout(
+    fig_admission.update_layout(
         xaxis_title="Admission Type",
-        yaxis_title="Rate (%)",
-        legend_title="Outcome"
+        yaxis_title="Rate (%)"
     )
 
     st.plotly_chart(
-        fig,
+        fig_admission,
         use_container_width=True
     )
 
 
 # ============================================================
-# DESCRIPTIVE ANALYSIS PAGE
+# PAGE 2 — DESCRIPTIVE ANALYSIS
 # ============================================================
 
 elif page == "📊 Descriptive Analysis":
 
     st.markdown(
-        '<div class="section-title">'
-        'Descriptive Analysis'
-        '</div>',
+        """
+        <div class="section-title">
+            Descriptive Analysis
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
     st.markdown(
-        '<div class="section-description">'
-        'Explore patient demographics, disease severity, '
-        'clinical characteristics and biomarkers.'
-        '</div>',
+        """
+        <div class="section-description">
+            Explore patient demographics, clinical severity,
+            nutritional characteristics and biomarkers.
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
-
-    # ========================================================
-    # ROW 1
-    # ========================================================
 
     col1, col2 = st.columns(2)
 
 
     # --------------------------------------------------------
-    # AGE DISTRIBUTION
+    # AGE GROUP
     # --------------------------------------------------------
 
     with col1:
@@ -656,7 +642,7 @@ elif page == "📊 Descriptive Analysis":
             "Patients"
         ]
 
-        fig_age = px.bar(
+        fig = px.bar(
             age_counts,
             x="Age Group",
             y="Patients",
@@ -665,7 +651,7 @@ elif page == "📊 Descriptive Analysis":
         )
 
         st.plotly_chart(
-            fig_age,
+            fig,
             use_container_width=True
         )
 
@@ -691,7 +677,7 @@ elif page == "📊 Descriptive Analysis":
             "Patients"
         ]
 
-        fig_bmi = px.pie(
+        fig = px.pie(
             bmi_counts,
             names="BMI Category",
             values="Patients",
@@ -699,30 +685,44 @@ elif page == "📊 Descriptive Analysis":
         )
 
         st.plotly_chart(
-            fig_bmi,
+            fig,
             use_container_width=True
         )
 
 
-    # ========================================================
-    # ROW 2
-    # ========================================================
+    # --------------------------------------------------------
+    # SECOND ROW
+    # --------------------------------------------------------
 
     col3, col4 = st.columns(2)
 
 
-    # --------------------------------------------------------
-    # NYHA
-    # --------------------------------------------------------
-
+    # NYHA MORTALITY
     with col3:
 
         st.subheader(
             "6-Month Mortality by NYHA Class"
         )
 
+        nyha_data = filtered_df[
+            [
+                "nyha_cardiac_function_classification",
+                "death_within_6_months"
+            ]
+        ].copy()
+
+        nyha_data[
+            "death_within_6_months"
+        ] = pd.to_numeric(
+            nyha_data[
+                "death_within_6_months"
+            ],
+            errors="coerce"
+        )
+
         nyha = (
-            filtered_df
+            nyha_data
+            .dropna()
             .groupby(
                 "nyha_cardiac_function_classification"
             )["death_within_6_months"]
@@ -754,10 +754,7 @@ elif page == "📊 Descriptive Analysis":
         )
 
 
-    # --------------------------------------------------------
-    # KILLIP
-    # --------------------------------------------------------
-
+    # KILLIP MORTALITY
     with col4:
 
         st.subheader(
@@ -797,23 +794,41 @@ elif page == "📊 Descriptive Analysis":
         )
 
 
-    # ========================================================
+    # --------------------------------------------------------
     # BIOMARKER EXPLORER
-    # ========================================================
+    # --------------------------------------------------------
 
     st.divider()
 
-    st.subheader("Interactive Biomarker Explorer")
+    st.subheader(
+        "🧪 Interactive Biomarker Explorer"
+    )
 
     biomarker_options = {
-        "BNP": "brain_natriuretic_peptide",
-        "Troponin": "high_sensitivity_troponin",
-        "hs-CRP": "hs_crp",
-        "Albumin": "albumin",
-        "Creatinine": "creatinine_enzymatic_method",
-        "GFR": "glomerular_filtration_rate",
-        "Sodium": "sodium",
-        "LVEF": "lvef"
+
+        "BNP":
+            "brain_natriuretic_peptide",
+
+        "Troponin":
+            "high_sensitivity_troponin",
+
+        "hs-CRP":
+            "hs_crp",
+
+        "Albumin":
+            "albumin",
+
+        "Creatinine":
+            "creatinine_enzymatic_method",
+
+        "GFR":
+            "glomerular_filtration_rate",
+
+        "Sodium":
+            "sodium",
+
+        "LVEF":
+            "lvef"
     }
 
     selected_marker = st.selectbox(
@@ -832,24 +847,29 @@ elif page == "📊 Descriptive Analysis":
         ]
     ].copy()
 
-    marker_data[marker_column] = pd.to_numeric(
-        marker_data[marker_column],
+    marker_data[
+        marker_column
+    ] = pd.to_numeric(
+        marker_data[
+            marker_column
+        ],
         errors="coerce"
     )
 
     marker_data = marker_data.dropna()
 
-    marker_data["6-Month Outcome"] = (
-        marker_data["death_within_6_months"]
-        .map(
-            {
-                0: "Survived",
-                1: "Died"
-            }
-        )
+    marker_data[
+        "6-Month Outcome"
+    ] = marker_data[
+        "death_within_6_months"
+    ].map(
+        {
+            0: "Survived",
+            1: "Died"
+        }
     )
 
-    fig_marker = px.box(
+    fig = px.box(
         marker_data,
         x="6-Month Outcome",
         y=marker_column,
@@ -857,45 +877,49 @@ elif page == "📊 Descriptive Analysis":
         template="plotly_white"
     )
 
-    fig_marker.update_yaxes(
+    fig.update_yaxes(
         title=selected_marker
     )
 
     st.plotly_chart(
-        fig_marker,
+        fig,
         use_container_width=True
     )
 
 
 # ============================================================
-# PRESCRIPTIVE ANALYSIS PAGE
+# PAGE 3 — PRESCRIPTIVE ANALYSIS
 # ============================================================
 
 elif page == "🩺 Prescriptive Analysis":
 
     st.markdown(
-        '<div class="section-title">'
-        'Prescriptive Analysis'
-        '</div>',
+        """
+        <div class="section-title">
+            Prescriptive Analysis
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
     st.markdown(
-        '<div class="section-description">'
-        'Identify patient groups that may benefit from '
-        'closer follow-up, discharge planning and '
-        'transitional-care support.'
-        '</div>',
+        """
+        <div class="section-description">
+            Identify patient groups associated with
+            readmission, mortality, emergency return and
+            hospital utilization.
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
 
-    # ========================================================
+    # --------------------------------------------------------
     # EMERGENCY VS NON-EMERGENCY
-    # ========================================================
+    # --------------------------------------------------------
 
     st.subheader(
-        "Emergency vs Non-Emergency Admissions"
+        "🚑 Emergency vs Non-Emergency Admissions"
     )
 
     admission = (
@@ -922,19 +946,14 @@ elif page == "🩺 Prescriptive Analysis":
         .reset_index()
     )
 
-    admission[
-        "Readmission"
-    ] *= 100
-
-    admission[
-        "Mortality"
-    ] *= 100
+    admission["Readmission"] *= 100
+    admission["Mortality"] *= 100
 
 
-    a1, a2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
 
-    with a1:
+    with col1:
 
         fig = px.bar(
             admission,
@@ -955,7 +974,7 @@ elif page == "🩺 Prescriptive Analysis":
         )
 
 
-    with a2:
+    with col2:
 
         outcome_long = admission.melt(
             id_vars="admission_way",
@@ -977,9 +996,8 @@ elif page == "🩺 Prescriptive Analysis":
             template="plotly_white"
         )
 
-        fig.update_layout(
-            xaxis_title="Admission Type",
-            yaxis_title="Rate (%)"
+        fig.update_yaxes(
+            title="Rate (%)"
         )
 
         st.plotly_chart(
@@ -988,14 +1006,14 @@ elif page == "🩺 Prescriptive Analysis":
         )
 
 
-    # ========================================================
+    # --------------------------------------------------------
     # DISCHARGE DESTINATION
-    # ========================================================
+    # --------------------------------------------------------
 
     st.divider()
 
     st.subheader(
-        "Outcomes by Discharge Destination"
+        "🏥 Outcomes by Discharge Destination"
     )
 
     destination = (
@@ -1026,7 +1044,6 @@ elif page == "🩺 Prescriptive Analysis":
         "ED_Return"
     ] *= 100
 
-
     destination_long = destination.melt(
         id_vars=[
             "destinationdischarge",
@@ -1039,7 +1056,6 @@ elif page == "🩺 Prescriptive Analysis":
         var_name="Outcome",
         value_name="Rate"
     )
-
 
     fig = px.bar(
         destination_long,
@@ -1062,14 +1078,14 @@ elif page == "🩺 Prescriptive Analysis":
     )
 
 
-    # ========================================================
-    # FREQUENT RETURNERS
-    # ========================================================
+    # --------------------------------------------------------
+    # RETURN PROFILE
+    # --------------------------------------------------------
 
     st.divider()
 
     st.subheader(
-        "Hospital Return Profile"
+        "🔁 Hospital Return Profile"
     )
 
     return_data = filtered_df.copy()
@@ -1092,7 +1108,6 @@ elif page == "🩺 Prescriptive Analysis":
         "No recorded return"
     )
 
-
     return_summary = (
         return_data[
             "Return Status"
@@ -1105,7 +1120,6 @@ elif page == "🩺 Prescriptive Analysis":
         "Return Status",
         "Patients"
     ]
-
 
     fig = px.pie(
         return_summary,
@@ -1120,111 +1134,35 @@ elif page == "🩺 Prescriptive Analysis":
     )
 
 
-    # ========================================================
-    # RISK MARKERS
-    # ========================================================
-
-    st.divider()
-
-    st.subheader(
-        "Clinical Risk Marker Explorer"
-    )
-
-    risk_marker_options = {
-        "BNP": "brain_natriuretic_peptide",
-        "Troponin": "high_sensitivity_troponin",
-        "hs-CRP": "hs_crp",
-        "Albumin": "albumin",
-        "Creatinine": "creatinine_enzymatic_method",
-        "GFR": "glomerular_filtration_rate",
-        "LVEF": "lvef",
-        "Systolic BP": "systolic_blood_pressure",
-        "CCI Score": "cci_score"
-    }
-
-
-    risk_marker = st.selectbox(
-        "Select Risk Marker",
-        list(risk_marker_options.keys())
-    )
-
-
-    risk_column = risk_marker_options[
-        risk_marker
-    ]
-
-
-    risk_df = return_data[
-        [
-            risk_column,
-            "Return Status"
-        ]
-    ].copy()
-
-
-    risk_df[risk_column] = pd.to_numeric(
-        risk_df[risk_column],
-        errors="coerce"
-    )
-
-    risk_df = risk_df.dropna()
-
-
-    fig = px.box(
-        risk_df,
-        x="Return Status",
-        y=risk_column,
-        points="outliers",
-        template="plotly_white"
-    )
-
-    fig.update_yaxes(
-        title=risk_marker
-    )
-
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-
 # ============================================================
-# PREDICTIVE ANALYSIS PAGE
+# PAGE 4 — PREDICTIVE ANALYSIS
 # ============================================================
 
 elif page == "🤖 Predictive Analysis":
 
     st.markdown(
-        '<div class="section-title">'
-        'Predictive Analysis'
-        '</div>',
+        """
+        <div class="section-title">
+            Predictive Analysis
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
     st.markdown(
-        '<div class="section-description">'
-        'Explore predictors used in the heart-failure '
-        'risk models and visualize their relationship '
-        'with patient outcomes.'
-        '</div>',
+        """
+        <div class="section-description">
+            Explore relationships between important predictors
+            and heart-failure outcomes.
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
 
-    # ========================================================
-    # OUTCOME SELECTION
-    # ========================================================
-
-    outcome_label = st.selectbox(
-        "Select Prediction Outcome",
-        [
-            "28-Day Mortality",
-            "6-Month Mortality",
-            "6-Month Readmission",
-            "6-Month ED Return"
-        ]
-    )
-
+    # --------------------------------------------------------
+    # OUTCOME SELECTOR
+    # --------------------------------------------------------
 
     outcome_mapping = {
 
@@ -1241,19 +1179,24 @@ elif page == "🤖 Predictive Analysis":
             "return_to_emergency_department_within_6_months"
     }
 
+    outcome_label = st.selectbox(
+        "Select Prediction Outcome",
+        list(outcome_mapping.keys())
+    )
 
     selected_outcome = outcome_mapping[
         outcome_label
     ]
 
 
-    # ========================================================
-    # PREDICTOR EXPLORER
-    # ========================================================
+    # --------------------------------------------------------
+    # PREDICTOR SELECTOR
+    # --------------------------------------------------------
 
     predictor_options = {
 
-        "BMI": "bmi",
+        "BMI":
+            "bmi",
 
         "NYHA Class":
             "nyha_cardiac_function_classification",
@@ -1295,12 +1238,10 @@ elif page == "🤖 Predictive Analysis":
             "total_drugs"
     }
 
-
     selected_predictor = st.selectbox(
         "Select Predictor",
         list(predictor_options.keys())
     )
-
 
     predictor_column = predictor_options[
         selected_predictor
@@ -1314,23 +1255,29 @@ elif page == "🤖 Predictive Analysis":
         ]
     ].copy()
 
-
-    pred_data[predictor_column] = pd.to_numeric(
-        pred_data[predictor_column],
+    pred_data[
+        predictor_column
+    ] = pd.to_numeric(
+        pred_data[
+            predictor_column
+        ],
         errors="coerce"
     )
 
-
-    pred_data[selected_outcome] = pd.to_numeric(
-        pred_data[selected_outcome],
+    pred_data[
+        selected_outcome
+    ] = pd.to_numeric(
+        pred_data[
+            selected_outcome
+        ],
         errors="coerce"
     )
-
 
     pred_data = pred_data.dropna()
 
-
-    pred_data["Outcome"] = pred_data[
+    pred_data[
+        "Outcome"
+    ] = pred_data[
         selected_outcome
     ].map(
         {
@@ -1340,14 +1287,9 @@ elif page == "🤖 Predictive Analysis":
     )
 
 
-    # ========================================================
-    # PREDICTOR DISTRIBUTION
-    # ========================================================
-
     st.subheader(
         f"{selected_predictor} vs {outcome_label}"
     )
-
 
     fig = px.violin(
         pred_data,
@@ -1358,11 +1300,9 @@ elif page == "🤖 Predictive Analysis":
         template="plotly_white"
     )
 
-
     fig.update_yaxes(
         title=selected_predictor
     )
-
 
     st.plotly_chart(
         fig,
@@ -1370,16 +1310,15 @@ elif page == "🤖 Predictive Analysis":
     )
 
 
-    # ========================================================
-    # NYHA + KILLIP HEATMAP
-    # ========================================================
+    # --------------------------------------------------------
+    # NYHA + KILLIP RISK VIEW
+    # --------------------------------------------------------
 
     st.divider()
 
     st.subheader(
-        "NYHA + Killip Combined Risk View"
+        "🔥 NYHA + Killip Combined Risk View"
     )
-
 
     severity = (
         filtered_df
@@ -1394,13 +1333,11 @@ elif page == "🤖 Predictive Analysis":
         .reset_index()
     )
 
-
     severity_matrix = severity.pivot(
         index="nyha_cardiac_function_classification",
         columns="killip_grade",
         values=selected_outcome
     )
-
 
     fig = px.imshow(
         severity_matrix,
@@ -1413,106 +1350,130 @@ elif page == "🤖 Predictive Analysis":
         }
     )
 
-
     st.plotly_chart(
         fig,
         use_container_width=True
     )
 
-
-    st.markdown(
-        """
-        <div class="insight-box">
-        <b>How to interpret this page:</b><br>
-        Use the outcome and predictor selectors to explore how
-        individual clinical characteristics differ between
-        patients with and without the selected outcome.
-        The NYHA–Killip heatmap shows the observed outcome rate
-        across combinations of heart-failure severity.
-        These are exploratory associations and are not a
-        substitute for validated clinical prediction models.
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.info(
+        "These charts show exploratory relationships between "
+        "predictors and outcomes. They should not be interpreted "
+        "as validated clinical prediction tools."
     )
 
+
 # ============================================================
-# DATA EXPLORER PAGE
+# PAGE 5 — EXPLORE DATA
 # ============================================================
 
 elif page == "📁 Explore Data":
 
     # --------------------------------------------------------
-    # PAGE HEADER
+    # HEADER
     # --------------------------------------------------------
 
-    st.markdown("""
-    <div style="
-        background: linear-gradient(90deg, #12355b, #2f6690);
-        padding: 25px 30px;
-        border-radius: 18px;
-        margin-bottom: 25px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.10);
-    ">
-        <h2 style="
-            color:white;
-            margin:0;
-            font-size:30px;
+    st.markdown(
+        """
+        <div style="
+            background:linear-gradient(90deg,#12355b,#2f6690);
+            padding:24px 30px;
+            border-radius:18px;
+            margin-bottom:25px;
+            box-shadow:0 6px 18px rgba(0,0,0,0.10);
         ">
-            📁 Patient Data Explorer
-        </h2>
+            <h2 style="color:white;margin:0;">
+                📁 Patient Data Explorer
+            </h2>
 
-        <p style="
-            color:#e8f1f8;
-            margin-top:8px;
-            margin-bottom:0;
-            font-size:16px;
-        ">
-            Explore demographic, clinical, biomarker and
-            outcome information for the selected patient population.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+            <div style="
+                color:#e8f1f8;
+                margin-top:8px;
+                font-size:16px;
+            ">
+                Explore demographic, clinical, biomarker and outcome
+                information for the selected patient population.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
     # --------------------------------------------------------
-    # KPI SUMMARY
+    # SUMMARY KPIs
     # --------------------------------------------------------
 
     filtered_count = len(filtered_df)
     original_count = len(df)
-    column_count = len(filtered_df.columns)
+    dataset_columns = len(df.columns)
 
-    patient_percentage = (
-        filtered_count / original_count * 100
-        if original_count > 0 else 0
+    cohort_percentage = (
+        filtered_count /
+        original_count *
+        100
     )
 
+    d1, d2, d3, d4 = st.columns(4)
 
-    k1, k2, k3, k4 = st.columns(4)
-
-    k1.metric(
+    d1.metric(
         "👥 Filtered Patients",
         f"{filtered_count:,}"
     )
 
-    k2.metric(
+    d2.metric(
         "🗂️ Dataset Variables",
-        f"{column_count:,}"
+        f"{dataset_columns:,}"
     )
 
-    k3.metric(
+    d3.metric(
         "🏥 Original Cohort",
         f"{original_count:,}"
     )
 
-    k4.metric(
+    d4.metric(
         "📊 Cohort Selected",
-        f"{patient_percentage:.1f}%"
+        f"{cohort_percentage:.1f}%"
     )
 
 
     st.markdown("<br>", unsafe_allow_html=True)
+
+
+    # --------------------------------------------------------
+    # BUILD PATIENT VIEW HEADER
+    # --------------------------------------------------------
+
+    st.markdown(
+        """
+        <div style="
+            background:white;
+            padding:18px 22px;
+            border-radius:14px;
+            border:1px solid #d9e2ec;
+            margin-top:20px;
+            margin-bottom:15px;
+            box-shadow:0 3px 10px rgba(16,42,67,0.05);
+        ">
+
+            <h3 style="
+                color:#102a43;
+                margin:0;
+            ">
+                🔎 Build Your Patient View
+            </h3>
+
+            <div style="
+                color:#627d98;
+                margin-top:6px;
+            ">
+                Select variables from the categories below
+                to customize the patient table.
+            </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
     # --------------------------------------------------------
@@ -1591,7 +1552,7 @@ elif page == "📁 Explore Data":
     }
 
 
-    outcome_columns = {
+    patient_outcome_columns = {
 
         "28-Day Mortality":
             "death_within_28_days",
@@ -1611,35 +1572,8 @@ elif page == "📁 Explore Data":
 
 
     # --------------------------------------------------------
-    # COLUMN SELECTOR SECTION
+    # TABS
     # --------------------------------------------------------
-
-    st.markdown("""
-    <div style="
-        background:white;
-        padding:18px 22px;
-        border-radius:14px;
-        border:1px solid #d9e2ec;
-        margin-bottom:15px;
-    ">
-        <h3 style="
-            color:#102a43;
-            margin:0;
-        ">
-            🔎 Build Your Patient View
-        </h3>
-
-        <p style="
-            color:#627d98;
-            margin-top:6px;
-            margin-bottom:0;
-        ">
-            Select variables from the categories below
-            to customize the patient table.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
 
     tab1, tab2, tab3, tab4 = st.tabs(
         [
@@ -1650,10 +1584,6 @@ elif page == "📁 Explore Data":
         ]
     )
 
-
-    # --------------------------------------------------------
-    # DEMOGRAPHICS
-    # --------------------------------------------------------
 
     with tab1:
 
@@ -1672,10 +1602,6 @@ elif page == "📁 Explore Data":
         )
 
 
-    # --------------------------------------------------------
-    # CLINICAL
-    # --------------------------------------------------------
-
     with tab2:
 
         selected_clinical = st.multiselect(
@@ -1692,10 +1618,6 @@ elif page == "📁 Explore Data":
         )
 
 
-    # --------------------------------------------------------
-    # BIOMARKERS
-    # --------------------------------------------------------
-
     with tab3:
 
         selected_biomarkers = st.multiselect(
@@ -1708,16 +1630,12 @@ elif page == "📁 Explore Data":
         )
 
 
-    # --------------------------------------------------------
-    # OUTCOMES
-    # --------------------------------------------------------
-
     with tab4:
 
         selected_outcomes = st.multiselect(
             "Select outcome variables",
             options=list(
-                outcome_columns.keys()
+                patient_outcome_columns.keys()
             ),
             default=[
                 "6-Month Mortality",
@@ -1728,14 +1646,17 @@ elif page == "📁 Explore Data":
 
 
     # --------------------------------------------------------
-    # COMBINE SELECTED VARIABLES
+    # COMBINE SELECTED COLUMNS
     # --------------------------------------------------------
 
     selected_friendly_names = (
         selected_demo
-        + selected_clinical
-        + selected_biomarkers
-        + selected_outcomes
+        +
+        selected_clinical
+        +
+        selected_biomarkers
+        +
+        selected_outcomes
     )
 
 
@@ -1754,7 +1675,7 @@ elif page == "📁 Explore Data":
     )
 
     all_column_options.update(
-        outcome_columns
+        patient_outcome_columns
     )
 
 
@@ -1774,13 +1695,13 @@ elif page == "📁 Explore Data":
 
 
     # --------------------------------------------------------
-    # PATIENT TABLE
+    # PATIENT RECORDS
     # --------------------------------------------------------
 
     st.divider()
 
-    st.markdown(
-        "### 🏥 Patient Records"
+    st.subheader(
+        "🏥 Patient Records"
     )
 
 
@@ -1791,7 +1712,7 @@ elif page == "📁 Explore Data":
         ].copy()
 
 
-        # Friendly column names
+        # Rename technical names
         reverse_names = {
 
             value: key
@@ -1806,33 +1727,15 @@ elif page == "📁 Explore Data":
         )
 
 
-        # Summary above table
-        st.markdown(
-            f"""
-            <div style="
-                background:#eef6ff;
-                border-left:5px solid #2f6690;
-                padding:12px 16px;
-                border-radius:8px;
-                margin-bottom:15px;
-            ">
-
-            <b>{len(display_df):,} patients</b>
-            are currently displayed using
-
-            <b>{len(display_df.columns)}
-            selected variables</b>.
-
-            </div>
-            """,
-            unsafe_allow_html=True
+        # Patient summary
+        st.info(
+            f"{len(display_df):,} patients are currently "
+            f"displayed using {len(display_df.columns)} "
+            f"selected variables."
         )
 
 
-        # ----------------------------------------------------
-        # DISPLAY TABLE
-        # ----------------------------------------------------
-
+        # Table
         st.dataframe(
             display_df,
             use_container_width=True,
@@ -1842,7 +1745,7 @@ elif page == "📁 Explore Data":
 
 
         # ----------------------------------------------------
-        # DOWNLOAD
+        # DOWNLOAD SELECTED DATA
         # ----------------------------------------------------
 
         csv = display_df.to_csv(
@@ -1854,17 +1757,18 @@ elif page == "📁 Explore Data":
             label="⬇️ Download Selected Patient Data",
             data=csv,
             file_name="heart_failure_patient_data.csv",
-            mime="text/csv",
-            use_container_width=False
+            mime="text/csv"
         )
 
 
     else:
 
         st.info(
-            "👆 Select variables from one or more "
+            "Select at least one variable from the "
             "categories above to display patient data."
         )
+
+
 # ============================================================
 # FOOTER
 # ============================================================
@@ -1874,8 +1778,9 @@ st.divider()
 st.markdown(
     """
     <div class="footer">
-    ❤️ Heart Failure Analytics Dashboard<br>
-    Team 2 - Python Pioneers | Python Hackathon 2026
+        ❤️ Heart Failure Analytics Dashboard
+        <br>
+        Team 2 - Python Pioneers | Python Hackathon 2026
     </div>
     """,
     unsafe_allow_html=True
