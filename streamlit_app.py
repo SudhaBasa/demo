@@ -183,7 +183,7 @@ with chart2:
         .mean()
         .mul(100)
         .reset_index()
-    )
+    ))
 
     nyha_mortality.columns = [
         "NYHA Class",
