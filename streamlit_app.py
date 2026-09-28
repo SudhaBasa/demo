@@ -1480,59 +1480,90 @@ elif page == "📁 Explore Data":
     st.divider()
 
 
-    search = st.text_input(
-        "Search column name"
+   # ============================================================
+# SELECT COLUMNS TO DISPLAY
+# ============================================================
+
+st.subheader("Patient Data Explorer")
+
+# Friendly names for important dataset columns
+column_options = {
+    "Patient Number": "inpatient_number",
+    "Gender": "gender",
+    "Age Group": "agecat",
+    "Admission Type": "admission_way",
+    "Discharge Destination": "destinationdischarge",
+    "NYHA Class": "nyha_cardiac_function_classification",
+    "Killip Grade": "killip_grade",
+    "BMI": "bmi",
+    "BMI Category": "bmi_category",
+    "BNP": "brain_natriuretic_peptide",
+    "Troponin": "high_sensitivity_troponin",
+    "hs-CRP": "hs_crp",
+    "Albumin": "albumin",
+    "Creatinine": "creatinine_enzymatic_method",
+    "GFR": "glomerular_filtration_rate",
+    "LVEF": "lvef",
+    "28-Day Mortality": "death_within_28_days",
+    "6-Month Mortality": "death_within_6_months",
+    "6-Month Readmission": "re_admission_within_6_months",
+    "6-Month ED Return": "return_to_emergency_department_within_6_months"
+}
+
+# Default columns shown when page opens
+default_columns = [
+    "Patient Number",
+    "Gender",
+    "Age Group",
+    "Admission Type",
+    "NYHA Class",
+    "Killip Grade",
+    "BMI",
+    "6-Month Mortality",
+    "6-Month Readmission"
+]
+
+selected_display_columns = st.multiselect(
+    "Select columns to view",
+    options=list(column_options.keys()),
+    default=default_columns
+)
+
+# Convert friendly names back to dataset column names
+selected_actual_columns = [
+    column_options[name]
+    for name in selected_display_columns
+    if column_options[name] in filtered_df.columns
+]
+
+# Display selected data
+if selected_actual_columns:
+
+    display_df = filtered_df[
+        selected_actual_columns
+    ].copy()
+
+    # Rename columns with friendly names
+    reverse_names = {
+        value: key
+        for key, value in column_options.items()
+    }
+
+    display_df = display_df.rename(
+        columns=reverse_names
     )
 
+    st.dataframe(
+        display_df,
+        use_container_width=True,
+        hide_index=True
+    )
 
-    if search:
+else:
 
-        selected_columns = [
-            column
-            for column in filtered_df.columns
-            if search.lower() in column.lower()
-        ]
-
-        if selected_columns:
-
-            st.dataframe(
-                filtered_df[selected_columns],
-                use_container_width=True
-            )
-
-        else:
-
-            st.info(
-                "No column names matched your search."
-            )
-
-    else:
-
-        default_columns = [
-            "inpatient_number",
-            "gender",
-            "agecat",
-            "admission_way",
-            "destinationdischarge",
-            "nyha_cardiac_function_classification",
-            "killip_grade",
-            "bmi",
-            "death_within_28_days",
-            "death_within_6_months",
-            "re_admission_within_6_months",
-            "return_to_emergency_department_within_6_months"
-        ]
-
-        default_columns = [
-            c for c in default_columns
-            if c in filtered_df.columns
-        ]
-
-        st.dataframe(
-            filtered_df[default_columns],
-            use_container_width=True
-        )
-
+    st.info(
+        "Select at least one column to display patient data."
+    )
 
 # ============================================================
 # FOOTER
